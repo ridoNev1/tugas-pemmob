@@ -11,50 +11,56 @@ flowchart TD
     classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
 
     %% Flow
-    Start([Mulai Aplikasi]) :::mobile --> CheckAuth{Sudah Login?} :::decision
+    Start([Mulai Aplikasi]) --> CheckAuth{Sudah Login?}
     
     %% Auth Flow
-    CheckAuth -- Belum --> Login[Login via Firebase Auth] :::mobile
+    CheckAuth -- Belum --> Login[Login via Firebase Auth]
     Login --> Dashboard
-    CheckAuth -- Sudah --> Dashboard[Tampil Dashboard] :::mobile
+    CheckAuth -- Sudah --> Dashboard[Tampil Dashboard]
     
     %% Patient Selection
-    Dashboard --> SelectPatient[Pilih / Buat Data Pasien Baru] :::mobile
-    SelectPatient --> InputXray[Upload Foto X-Ray<br/>Kamera / Galeri] :::mobile
+    Dashboard --> SelectPatient[Pilih / Buat Data Pasien Baru]
+    SelectPatient --> InputXray[Upload Foto X-Ray<br/>Kamera / Galeri]
     
     %% Validation
-    InputXray --> ValidateFile{Validasi Format<br/>& Ukuran?} :::decision
-    ValidateFile -- Tidak Valid --> ErrorMsg[Tampil Pesan Error] :::mobile
+    InputXray --> ValidateFile{Validasi Format<br/>& Ukuran?}
+    ValidateFile -- Tidak Valid --> ErrorMsg[Tampil Pesan Error]
     ErrorMsg --> InputXray
     
     %% API Request
-    ValidateFile -- Valid --> Preview[Preview Gambar X-Ray] :::mobile
-    Preview --> HitAPI[Tekan 'Analisis'<br/>POST /predict] :::mobile
+    ValidateFile -- Valid --> Preview[Preview Gambar X-Ray]
+    Preview --> HitAPI[Tekan 'Analisis'<br/>POST /predict]
     
     %% Backend Processing Subgraph
     subgraph Backend [Backend API & AI Engine]
         direction TB
-        HitAPI --> Preprocess[Preprocessing<br/>Resize 224x224 & Normalize] :::backend
-        Preprocess --> Inference[Inference Model MobileNetV2] :::backend
-        Inference --> GradCam[Generate Grad-CAM Heatmap] :::backend
-        GradCam --> CheckConfidence{Confidence<br/>>= 70%?} :::decision
+        HitAPI --> Preprocess[Preprocessing<br/>Resize 224x224 & Normalize]
+        Preprocess --> Inference[Inference Model MobileNetV2]
+        Inference --> GradCam[Generate Grad-CAM Heatmap]
+        GradCam --> CheckConfidence{Confidence<br/>>= 70%?}
         
-        CheckConfidence -- Ya --> LabelPos[Label: TB POSITIF] :::backend
-        CheckConfidence -- Tidak --> LabelNeg[Label: NORMAL] :::backend
+        CheckConfidence -- Ya --> LabelPos[Label: TB POSITIF]
+        CheckConfidence -- Tidak --> LabelNeg[Label: NORMAL]
         
-        LabelPos --> ReturnResponse[Return JSON Response<br/>Label, Confidence, Heatmap] :::backend
+        LabelPos --> ReturnResponse[Return JSON Response<br/>Label, Confidence, Heatmap]
         LabelNeg --> ReturnResponse
     end
     
     %% Result & Storage
-    ReturnResponse --> ShowResult[Tampil Hasil & Rekomendasi<br/>di Layar Smartphone] :::mobile
-    ShowResult --> SaveData[Auto-save Hasil & Heatmap<br/>ke Firestore & Storage] :::storage
+    ReturnResponse --> ShowResult[Tampil Hasil & Rekomendasi<br/>di Layar Smartphone]
+    ShowResult --> SaveData[Auto-save Hasil & Heatmap<br/>ke Firestore & Storage]
     
     %% Export / End
-    SaveData --> AskExport{Export PDF?} :::decision
-    AskExport -- Ya --> ExportPDF[Generate Laporan PDF] :::mobile
-    AskExport -- Tidak --> End([Selesai]) :::mobile
+    SaveData --> AskExport{Export PDF?}
+    AskExport -- Ya --> ExportPDF[Generate Laporan PDF]
+    AskExport -- Tidak --> End([Selesai])
     ExportPDF --> End
+
+    %% Apply Classes
+    class Start,Login,Dashboard,SelectPatient,InputXray,ErrorMsg,Preview,HitAPI,ShowResult,ExportPDF,End mobile;
+    class Preprocess,Inference,GradCam,LabelPos,LabelNeg,ReturnResponse backend;
+    class SaveData storage;
+    class CheckAuth,ValidateFile,CheckConfidence,AskExport decision;
 ```
 
 ### Keterangan Warna:
